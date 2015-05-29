@@ -1,19 +1,32 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.diffhtml = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var makeNode = require('./make_node');
+var svg = require('./svg');
 
 function makeElement(descriptor) {
   var element = null;
+  var isSvg = false;
 
   if (descriptor.nodeName === '#text') {
     element = document.createTextNode(descriptor.nodeValue);
   }
   else {
-    element = document.createElement(descriptor.nodeName);
+    if (svg.elements.indexOf(descriptor.nodeName) > -1) {
+      isSvg = true;
+      element = document.createElementNS(svg.namespace, descriptor.nodeName);
+    }
+    else {
+      element = document.createElement(descriptor.nodeName);
+    }
 
     if (descriptor.attributes && descriptor.attributes.length) {
       for (var i = 0; i < descriptor.attributes.length; i++) {
         var attribute = descriptor.attributes[i];
-        element.setAttribute(attribute.name, attribute.value);
+        if (isSvg) {
+          element.setAttributeNS(null, attribute.name, attribute.value);
+        }
+        else {
+          element.setAttribute(attribute.name, attribute.value);
+        }
       }
     }
 
@@ -32,7 +45,7 @@ function makeElement(descriptor) {
 
 module.exports = makeElement;
 
-},{"./make_node":2}],2:[function(require,module,exports){
+},{"./make_node":2,"./svg":4}],2:[function(require,module,exports){
 var pools = require('../util/pools');
 var push = Array.prototype.push;
 
@@ -118,7 +131,7 @@ function makeNode(node) {
 
 module.exports = makeNode;
 
-},{"../util/pools":9}],3:[function(require,module,exports){
+},{"../util/pools":10}],3:[function(require,module,exports){
 var pools = require('../util/pools');
 var poolCount = 10000;
 
@@ -393,7 +406,94 @@ function patch(element, newHTML, isInner) {
 
 module.exports = patch;
 
-},{"../util/buffers":6,"../util/htmls":7,"../util/parser":8,"../util/pools":9,"../util/uuid":10,"../worker":11,"./make_element":1,"./make_node":2,"./sync_node":4}],4:[function(require,module,exports){
+},{"../util/buffers":7,"../util/htmls":8,"../util/parser":9,"../util/pools":10,"../util/uuid":11,"../worker":12,"./make_element":1,"./make_node":2,"./sync_node":5}],4:[function(require,module,exports){
+// List of SVG elements.
+exports.elements = [
+  'altGlyph',
+  'altGlyphDef',
+  'altGlyphItem',
+  'animate',
+  'animateColor',
+  'animateMotion',
+  'animateTransform',
+  'circle',
+  'clipPath',
+  'color-profile',
+  'cursor',
+  'defs',
+  'desc',
+  'ellipse',
+  'feBlend',
+  'feColorMatrix',
+  'feComponentTransfer',
+  'feComposite',
+  'feConvolveMatrix',
+  'feDiffuseLighting',
+  'feDisplacementMap',
+  'feDistantLight',
+  'feFlood',
+  'feFuncA',
+  'feFuncB',
+  'feFuncG',
+  'feFuncR',
+  'feGaussianBlur',
+  'feImage',
+  'feMerge',
+  'feMergeNode',
+  'feMorphology',
+  'feOffset',
+  'fePointLight',
+  'feSpecularLighting',
+  'feSpotLight',
+  'feTile',
+  'feTurbulence',
+  'filter',
+  'font',
+  'font-face',
+  'font-face-format',
+  'font-face-name',
+  'font-face-src',
+  'font-face-uri',
+  'foreignObject',
+  'g',
+  'glyph',
+  'glyphRef',
+  'hkern',
+  'image',
+  'line',
+  'linearGradient',
+  'marker',
+  'mask',
+  'metadata',
+  'missing-glyph',
+  'mpath',
+  'path',
+  'pattern',
+  'polygon',
+  'polyline',
+  'radialGradient',
+  'rect',
+  'script',
+  'set',
+  'stop',
+  'style',
+  'svg',
+  'switch',
+  'symbol',
+  'text',
+  'textPath',
+  'title',
+  'tref',
+  'tspan',
+  'use',
+  'view',
+  'vkern',
+];
+
+// Namespace.
+exports.namespace = 'http://www.w3.org/2000/svg';
+
+},{}],5:[function(require,module,exports){
 var pools = require('../util/pools');
 var slice = Array.prototype.slice;
 var filter = Array.prototype.filter;
@@ -579,7 +679,7 @@ function syncNode(virtualNode, liveNode) {
 
 exports.sync = syncNode;
 
-},{"../util/pools":9}],5:[function(require,module,exports){
+},{"../util/pools":10}],6:[function(require,module,exports){
 var patchNode = require('./diff/patch_node');
 
 Object.defineProperty(Element.prototype, 'outerDiffHTML', {
@@ -598,7 +698,7 @@ Object.defineProperty(Element.prototype, 'innerDiffHTML', {
   }
 });
 
-},{"./diff/patch_node":3}],6:[function(require,module,exports){
+},{"./diff/patch_node":3}],7:[function(require,module,exports){
 /**
  * stringToBuffer
  *
@@ -632,7 +732,7 @@ exports.bufferToString = function bufferToString(buffer) {
   return string;
 };
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var pools = require('./pools');
 var parser = require('./parser').makeParser();
 
@@ -648,7 +748,7 @@ function parseHTML(newHTML) {
 
 window.parseHTML = exports.parseHTML = parseHTML;
 
-},{"./parser":8,"./pools":9}],8:[function(require,module,exports){
+},{"./parser":9,"./pools":10}],9:[function(require,module,exports){
 (function (global){
 var pools = require('./pools');
 
@@ -2847,7 +2947,7 @@ module.exports.makeParser = function makeParser() {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../maps/decode.json":undefined,"../maps/entities.json":undefined,"../maps/legacy.json":undefined,"../maps/xml.json":undefined,"./decode_codepoint.js":undefined,"./lib/decode.js":undefined,"./lib/encode.js":undefined,"./package":undefined,"./pools":9,"./support/isBuffer":undefined,"_process":13,"apollojs":undefined,"entities":undefined,"inherits":undefined,"util":15}],9:[function(require,module,exports){
+},{"../maps/decode.json":undefined,"../maps/entities.json":undefined,"../maps/legacy.json":undefined,"../maps/xml.json":undefined,"./decode_codepoint.js":undefined,"./lib/decode.js":undefined,"./lib/encode.js":undefined,"./package":undefined,"./pools":10,"./support/isBuffer":undefined,"_process":14,"apollojs":undefined,"entities":undefined,"inherits":undefined,"util":16}],10:[function(require,module,exports){
 var pools = exports;
 var uuid = require('./uuid');
 
@@ -2982,7 +3082,7 @@ function initializePools(COUNT) {
 exports.create = createPool;
 exports.initialize = initializePools;
 
-},{"./uuid":10}],10:[function(require,module,exports){
+},{"./uuid":11}],11:[function(require,module,exports){
 /**
  * Generates a uuid.
  *
@@ -2998,7 +3098,7 @@ function uuid() {
 
 module.exports = uuid;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 function startup(worker) {
   var oldTree = null;
   var patches = [];
@@ -3058,7 +3158,7 @@ function startup(worker) {
 
 module.exports = startup;
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3083,7 +3183,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -3143,14 +3243,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3740,5 +3840,5 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":14,"_process":13,"inherits":12}]},{},[5])(5)
+},{"./support/isBuffer":15,"_process":14,"inherits":13}]},{},[6])(6)
 });

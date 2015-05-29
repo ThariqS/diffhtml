@@ -63,8 +63,8 @@ select.onchange = function() {
           var fps = (1 / ((currentCall - lastCalled) / 1000));
           updateFPS(fps, start, currentCall);
           lastCalled = currentCall;
-          setTimeout(startRendering, 0);
-          //setTimeout(startRendering, 5000);
+          //setTimeout(startRendering, 0);
+          setTimeout(startRendering, 5000);
           //requestAnimationFrame(startRendering);
         };
 

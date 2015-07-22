@@ -2,7 +2,7 @@
   "name": "diffhtml",
   "version": "0.0.4",
   "description": "",
-  "main": "dist/diffhtml",
+  "main": "lib/index.js",
   "author": "Tim Branyen (@tbranyen)",
   "license": "MIT",
   "scripts": {
